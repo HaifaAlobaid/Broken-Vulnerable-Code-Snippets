@@ -1,43 +1,51 @@
 const express = require('express');
-const router = express.Router()
+const mysql = require('mysql');
+const router = express.Router();
+const config = require('./config'); // make sure you are importing config correctly
 
-const config = require('../../config')
-const mysql      = require('mysql');
 const connection = mysql.createConnection({
-  host     : config.MYSQL_HOST,
-  port     : config.MYSQL_PORT,
-  user     : config.MYSQL_USER,
-  password : config.MYSQL_PASSWORD,
-  database : config.MYSQL_DB_NAME,
+  host: config.MYSQL_HOST,
+  user: config.MYSQL_USER,
+  password: config.MYSQL_PASSWORD,
+  database: config.MYSQL_DB_NAME,
 });
- 
+
 connection.connect();
 
-router.get('/example1/user/:id', (req,res) => {
+// Secure Example 1
+router.get('/example1/user/:id', (req, res) => {
     let userId = req.params.id;
     let query = {
-        sql : "SELECT * FROM users WHERE id=" + userId
-    }
-    connection.query(query,(err, result) => {
+        sql: "SELECT * FROM users WHERE id = ?",
+        values: [userId]
+    };
+    connection.query(query, (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
         res.json(result);
     });
-})
+});
 
-router.get('/example2/user/:id',  (req,res) => {
+// Secure Example 2
+router.get('/example2/user/:id', (req, res) => {
     let userId = req.params.id;
-    connection.query("SELECT * FROM users WHERE id=" + userId,(err, result) => {
+    connection.query("SELECT * FROM users WHERE id = ?", [userId], (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
         res.json(result);
     });
-})
+});
 
-router.get('/example3/user/:id',  (req,res) => {
+// Secure Example 3
+router.get('/example3/user/:id', (req, res) => {
     let userId = req.params.id;
-    connection.query({
-        sql : "SELECT * FROM users WHERE id=" +userId
-    },(err, result) => {
+    let query = {
+        sql: "SELECT * FROM users WHERE id = ?",
+        values: [userId]
+    };
+    connection.query(query, (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
         res.json(result);
     });
-})
+});
 
+module.exports = router;
 
-module.exports = router
